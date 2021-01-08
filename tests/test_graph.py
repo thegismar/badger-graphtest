@@ -205,7 +205,7 @@ def test_sanity_graph(k, v):
 
 @pytest.mark.parametrize("k, v", geyser.items())
 def test_sanity_chain(k, v):
-    df = get_chain_data(k, v, blockheight)
+    df = get_chain_data(k, v)
     sum_staked = df["amount"].sum()
     value_sc = v.totalStaked(block_identifier=blockheight)
     assert sum_staked == value_sc

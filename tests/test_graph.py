@@ -9,7 +9,8 @@ from gql.transport.aiohttp import AIOHTTPTransport
 KEY = os.getenv("ETHERSCAN_TOKEN")
 network.connect("alchemy")
 
-blockheight = chain.height
+# set latest block a bit back to give thegraph time to sync
+blockheight = chain.height - 50
 
 geyser = {
     "badger": Contract.from_explorer("0xa9429271a28F8543eFFfa136994c0839E7d7bF77"),
@@ -36,11 +37,10 @@ birth_block = {
 }
 
 
-def get_chain_data(k, v, blockheight):
+def get_chain_data(k, v):
     """
     :param k: name of contract/geyser
     :param v: geyser contract
-    :param blockheight: latest block that we will use (constant so that we won't have anything change while iterating)
     :return: Dataframe with significant event data in columns
     """
 
@@ -103,9 +103,8 @@ def get_chain_data(k, v, blockheight):
     return df
 
 
-def get_graph_data(v, blockheight):
+def get_graph_data(v):
     """
-    :param blockheight: block at which we'll query
     :param v: brownie contract / geyser
     :returns df: datafram
     """
@@ -197,7 +196,7 @@ def get_graph_data(v, blockheight):
 
 @pytest.mark.parametrize("k, v", geyser.items())
 def test_sanity_graph(k, v):
-    df = get_graph_data(v, blockheight)
+    df = get_graph_data(v)
     df.reset_index(inplace=True, drop=True)
     sum_staked = df["amount"].sum()
     value_sc = v.totalStaked(block_identifier=blockheight)
@@ -214,8 +213,8 @@ def test_sanity_chain(k, v):
 
 @pytest.mark.parametrize("k, v", geyser.items())
 def test_values(k, v):
-    df_graph = get_graph_data(v, blockheight).astype(str)
-    df_chain = get_chain_data(k, v, blockheight).astype(str)
+    df_chain = get_chain_data(k, v).astype(str)
+    df_graph = get_graph_data(v).astype(str)
     df_chain_user = df_chain["user"].copy()
     df_graph_user = df_graph["user"].copy()
     df_graph_user.sort_values(inplace=True)
